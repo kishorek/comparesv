@@ -1,6 +1,12 @@
 # comparesv
 ### Python CSV Comparison on steriods 
 
+## Installation
+
+```console
+pip install comparesv
+```
+
 ## Usage
 
 ```console
