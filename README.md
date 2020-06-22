@@ -1,4 +1,4 @@
-# comparesc
+# comparesv
 ### CSV Comparison on steriods 
 
 ## Usage
