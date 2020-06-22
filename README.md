@@ -46,6 +46,139 @@ optional arguments:
   -s, --save-output     Save output to file
 ```
 
+## Examples
+
+### Scenario 1: Simple direct comparison
+
+|id |first   |last    |age|
+|---|--------|--------|---|
+|432|Roy     |Aguilar |46 |
+|914|Janie   |Bowman  |24 |
+|021|Grace   |Copeland|53 |
+|708|Louise  |Franklin|25 |
+|850|Gertrude|Carr    |60 |
+
+vs
+
+|id |first   |last    |age|
+|---|--------|--------|---|
+|432|Roy     |Aguilar |46 |
+|914|Janie   |Bowman  |24 |
+|021|Grace   |Copeland|53 |
+|708|Louise  |Franklin|25 |
+|850|Gertrude|Carr    |60 |
+
+```console
+comparesv file1 file2
+```
+
+Will provide:
+
+|S.No|id      |first   |last|age |
+|----|--------|--------|----|----|
+|1   |True    |True    |True|True|
+|2   |True    |True    |True|True|
+|3   |True    |True    |True|True|
+|4   |True    |True    |True|True|
+|5   |True    |True    |True|True|
+
+and
+
+|S.No|id      |first   |last|age |
+|----|--------|--------|----|----|
+|1   |[432]:[432]|[Roy]:[Roy]|[Aguilar]:[Aguilar]|[46]:[46]|
+|2   |[914]:[914]|[Janie]:[Janie]|[Bowman]:[Bowman]|[24]:[24]|
+|3   |[021]:[021]|[Grace]:[Grace]|[Copeland]:[Copeland]|[53]:[53]|
+|4   |[708]:[708]|[Louise]:[Louise]|[Franklin]:[Franklin]|[25]:[25]|
+|5   |[850]:[850]|[Gertrude]:[Gertrude]|[Carr]:[Carr]|[60]:[60]|
+
+---
+### Scenario 2: Fuzzy column names
+
+|id |first   |last    |age of student|
+|---|--------|--------|--------------|
+|432|Roy     |Aguilar |46            |
+|914|Janie   |Bowman  |24            |
+
+and 
+
+|id |first   |last    |age|
+|---|--------|--------|---|
+|432|Roy     |Aguilar |46 |
+|914|Janie   |Bowman  |24 |
+
+```console
+comparesv file1.csv file2.csv --column-match 'fuzzy'
+```
+
+will provide
+|S.No|id      |first   |last|age |
+|----|--------|--------|----|----|
+|1   |True    |True    |True|True|
+|2   |True    |True    |True|True|
+---
+### Scenario 3: Fuzzy row order - Differnt ordered textual data
+
+|id |first   |last    |age|
+|---|--------|--------|---|
+|432|Roy     |Aguilar |46 |
+|914|Janie   |Bowman  |24 |
+|021|Grace   |Copeland|53 |
+
+and
+
+|id |first   |last    |age of student|
+|---|--------|--------|--------------|
+|021|Grace   |Copeland|53            |
+|432|Roy     |Aguilar |46            |
+|914|Janie   |Bowman  |24            |
+
+```console
+comparesv file1.csv file2.csv --column-match 'fuzzy' --row-match 'fuzzy'
+```
+will provide
+
+|S.No|id      |first   |last|age |
+|----|--------|--------|----|----|
+|1   |True    |True    |True|True|
+|2   |True    |True    |True|True|
+|3   |True    |True    |True|True|
+--- 
+### Scenario 3: Deep row order - Different ordered numerical data
+
+|year1|year2   |year3   |year|
+|-----|--------|--------|----|
+|751  |609     |590     |930 |
+|417  |501     |441     |763 |
+|691  |621     |941     |563 |
+|179  |781     |335     |225 |
+|961  |530     |433     |571 |
+
+and
+
+|year1|year2   |year3   |year|
+|-----|--------|--------|----|
+|961  |530     |433     |571 |
+|751  |609     |590     |930 |
+|691  |621     |941     |563 |
+|179  |781     |335     |225 |
+|417  |501     |441     |763 |
+
+```console
+comparesv file1.csv file2.csv --row-match 'deep'
+```
+
+|S.No|year1   |year2   |year3|year|
+|----|--------|--------|-----|----|
+|1   |True    |True    |True |True|
+|2   |True    |True    |True |True|
+|3   |True    |True    |True |True|
+|4   |True    |True    |True |True|
+|5   |True    |True    |True |True|
+
+---
+### Scenario n: Unlimited options. Please explore the options below
+---
 ## Description
 
 The first file is considered as the source file. It will be compared against the second file. Refer the below options to finetune the way it works.

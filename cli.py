@@ -21,7 +21,6 @@ def main():
     sys.stderr.write('Starting up...\n')
     try:
         file1, file2, args = arguments()
-        print(args)
         data1, headers1 = read(*file1)
         data2, headers2 = read(*file2)
         results = comparesv.run(data1, headers1, data2, headers2, ticker=ticker, **args)
@@ -114,4 +113,3 @@ def format(results, keys):
 
 if __name__ == '__main__':
     main()
-

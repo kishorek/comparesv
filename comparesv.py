@@ -293,12 +293,3 @@ def predict_column_type(data):
         return "int"
     else:
         return "str"
-
-h1 = ["id", "age"]
-h2 = ["id", "age","gender"]
-d1 = [["A1", 23], ["A2", 24], ["A3", 34]]
-d2 = [["A1", 23,"M"], ["A2", 24,"F"], ["A3", 34,"O"]]
-
-output = run(d1, h1, d2, h2, include_addnl_columns='fuzzy')
-from pprint import pprint
-pprint(output)
