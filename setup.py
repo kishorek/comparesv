@@ -28,7 +28,8 @@ setup(
 		'tqdm==4.18.0',
 		'unidecode==1.1.1',
 		'doublemetaphone==0.1',
-		'fuzzywuzzy==0.18.0'
+		'fuzzywuzzy==0.18.0',
+		'python-Levenshtein==0.12.0'
 	],
 	entry_points={
 		'console_scripts': [
