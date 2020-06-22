@@ -108,8 +108,6 @@ def compare_data(data1, data2, headers1, headers2, matched_headers, **kwargs):
             added_rows.append(row2)
         elif mode == 'deleted':
             deleted_rows.append(row1)
-        # else:
-        #     common_rows.append(row1)
         rows_output.append(row_compare_result)
 
     if kwargs.get('include_addnl_rows'):
@@ -140,15 +138,15 @@ def exist_in_list(option, option_list):
 
 def prepare_headers(data1, headers1, headers2, column_match):
     mapped_headers_index = OrderedDict()
-    updated_indices2 = []
+    mapped_indices2 = []
     for index, header in enumerate(headers1):
         index = -1
         if column_match == 'exact':
             exists, index = exist_in_list(header, headers2)
         elif column_match == 'fuzzy':
-            indices2_left = [x for x in range(len(headers2)) if x not in updated_indices2]
-            index = fuzzy_column_index(header, headers2)
-            updated_indices2.append(index)
+            unmapped_header_indices = [x for x in range(len(headers2)) if x not in mapped_indices2]
+            index = fuzzy_column_index(header, headers2, unmapped_header_indices)
+            mapped_indices2.append(index)
 
         column_data = {}
         column_data['index'] = index
@@ -160,15 +158,20 @@ def prepare_headers(data1, headers1, headers2, column_match):
     return mapped_headers_index
 
 
-def fuzzy_column_index(header, headers_list):
-    exist, index = exist_in_list(header, headers_list)
-    if exist:
-        return index
+def fuzzy_column_index(header, headers_list, unmapped_header_indices):
+    unmapped_headers = [x for i,x in enumerate(headers_list) if i in unmapped_header_indices]
 
-    highest = process.extractOne(header, headers_list)
+    exist, index = exist_in_list(header, unmapped_headers)
+    if exist:
+        original_index = unmapped_header_indices[index]
+        return original_index
+
+    highest = process.extractOne(header, unmapped_headers)
     if highest[1] < ROW_THRESHOLD:
         return -1
-    return headers_list.index(highest[0])
+    unmapped_index = unmapped_headers.index(highest[0])
+    original_index = unmapped_header_indices[unmapped_index]
+    return original_index
 
 
 def deep_row_find(row, data2, headers1, headers2, matched_headers, data2_indices_left, opts):
@@ -191,17 +194,17 @@ def deep_row_find(row, data2, headers1, headers2, matched_headers, data2_indices
     
     return selected_row, selected_index
 
-
-def fuzzy_row_find(row, data2, headers1, matched_headers, data2_indices_left):
+def fuzzy_row_find(row, data2, headers1, matched_headers, unmapped_indices2):
     row1 = ' '.join(str(x) for x in row)
-    rows_list2 = [' '.join(str(x) for x in elem) for index, elem in enumerate(data2) if index in data2_indices_left]
-    highest = process.extractOne(row1, rows_list2)
+    unmapped_data2 = [' '.join(str(x) for x in elem) for index, elem in enumerate(data2) if index in unmapped_indices2]
+    highest = process.extractOne(row1, unmapped_data2)
 
     if highest[1] < ROW_THRESHOLD:
         return None, None
 
-    index = rows_list2.index(highest[0])
-    return data2[index], index
+    index = unmapped_data2.index(highest[0])
+    original_index = unmapped_indices2[index]
+    return data2[original_index], original_index
 
 
 def compare_rows(row1, row2, header_index, headers2, opts):
@@ -290,3 +293,12 @@ def predict_column_type(data):
         return "int"
     else:
         return "str"
+
+h1 = ["id", "age"]
+h2 = ["id", "age","gender"]
+d1 = [["A1", 23], ["A2", 24], ["A3", 34]]
+d2 = [["A1", 23,"M"], ["A2", 24,"F"], ["A3", 34,"O"]]
+
+output = run(d1, h1, d2, h2, include_addnl_columns='fuzzy')
+from pprint import pprint
+pprint(output)
