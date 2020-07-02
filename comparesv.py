@@ -247,7 +247,9 @@ def fetch_compare_mode(data_type, string_match):
 
 
 def compare_cells(cell1, cell2, comparison_type, ignore_case):
-    if not cell1 or not cell2:
+    if not cell1 and not cell2:
+        return True
+    elif not cell1 or not cell2:
         return False
 
     try:
