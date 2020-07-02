@@ -139,7 +139,7 @@ def exist_in_list(option, option_list):
 def prepare_headers(data1, headers1, headers2, column_match):
     mapped_headers_index = OrderedDict()
     mapped_indices2 = []
-    for index, header in enumerate(headers1):
+    for idx, header in enumerate(headers1):
         index = -1
         if column_match == 'exact':
             exists, index = exist_in_list(header, headers2)
@@ -152,7 +152,7 @@ def prepare_headers(data1, headers1, headers2, column_match):
         column_data['index'] = index
         if index != -1:
             column_data['matched_header'] = headers2[index]
-            column_data['type'] = predict_column_type([val[index] for val in data1])
+            column_data['type'] = predict_column_type([val[idx] for val in data1])
         mapped_headers_index[header] = column_data
 
     return mapped_headers_index
