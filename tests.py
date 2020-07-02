@@ -13,6 +13,17 @@ def test_basic():
 	assert result == output['results']
 	assert values == output['values']
 
+def test_basic_empty():
+	h1 = ["id", "age"]
+	h2 = ["id", "age"]
+	d1 = [["A1", 23], ["A2", 24], ["", 34]]
+	d2 = [["A1", 23], ["A2", 24], ["", 34]]
+
+	result = [[True, True], [True, True], [True, True]]
+	values = [['[A1]:[A1]', '[23]:[23]'], ['[A2]:[A2]', '[24]:[24]'], ['[]:[]', '[34]:[34]']]
+	output = comparesv.run(d1, h1, d2, h2)
+	assert result == output['results']
+	assert values == output['values']
 
 def test_column_order():
 	h1 = ["id", "age"]
