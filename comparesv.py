@@ -6,8 +6,6 @@ import time
 ROW_THRESHOLD = 80
 CELL_THRESHOLD = 80
 
-__version__ = 0.01
-
 def run(data1,
         headers1,
         data2,
@@ -230,7 +228,7 @@ def compare_rows(row1, row2, header_index, headers2, opts):
         addnl_headers2_indices = [headers2.index(header) for header in headers2 if header not in mapped_headers2]
         for index in addnl_headers2_indices:
             cell1 = ""
-            cell2 = row2[index]
+            cell2 = row2[index] if row2 else ""
 
             result = compare_cells(cell1, cell2, "str", opts['ignore_case'])
             output = [f"[{cell1}]:[{cell2}]", result]
