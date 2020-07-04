@@ -1,5 +1,5 @@
 import os
-from fuzzywuzzy import fuzz, process
+from rapidfuzz import fuzz, process
 from collections import OrderedDict
 import time
 
@@ -164,8 +164,8 @@ def fuzzy_column_index(header, headers_list, unmapped_header_indices):
         original_index = unmapped_header_indices[index]
         return original_index
 
-    highest = process.extractOne(header, unmapped_headers)
-    if highest[1] < ROW_THRESHOLD:
+    highest = process.extractOne(header, unmapped_headers, score_cutoff=ROW_THRESHOLD)
+    if highest is None:
         return -1
     unmapped_index = unmapped_headers.index(highest[0])
     original_index = unmapped_header_indices[unmapped_index]
@@ -195,9 +195,9 @@ def deep_row_find(row, data2, headers1, headers2, matched_headers, data2_indices
 def fuzzy_row_find(row, data2, headers1, matched_headers, unmapped_indices2):
     row1 = ' '.join(str(x) for x in row)
     unmapped_data2 = [' '.join(str(x) for x in elem) for index, elem in enumerate(data2) if index in unmapped_indices2]
-    highest = process.extractOne(row1, unmapped_data2)
+    highest = process.extractOne(row1, unmapped_data2, score_cutoff=ROW_THRESHOLD)
 
-    if highest[1] < ROW_THRESHOLD:
+    if highest is None:
         return None, None
 
     index = unmapped_data2.index(highest[0])
@@ -252,7 +252,7 @@ def compare_cells(cell1, cell2, comparison_type, ignore_case):
 
     try:
         if comparison_type == 'fuzzy_string':
-            if fuzz.token_set_ratio(cell1, cell2) > CELL_THRESHOLD:
+            if fuzz.token_set_ratio(cell1, cell2, score_cutoff=CELL_THRESHOLD):
                 return True
         elif comparison_type == 'int':
             return int(cell1) == int(cell2)
