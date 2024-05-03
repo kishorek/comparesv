@@ -25,7 +25,7 @@ setup(
 	keywords=['CSV', 'Comparison', 'Compare'],
 	install_requires=[
 		'chardet==3.0.4',
-		'tqdm==4.18.0',
+		'tqdm==4.66.3',
 		'unidecode==1.1.1',
 		'doublemetaphone==0.1',
 		'rapidfuzz==0.9.1'
