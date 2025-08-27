@@ -1,24 +1,44 @@
+from typing import Dict, List, Tuple, Any, Optional, Union
 import os
 from rapidfuzz import fuzz, process
 from collections import OrderedDict
-import time
 
 ROW_THRESHOLD = 80
 CELL_THRESHOLD = 80
 
-def run(data1,
-        headers1,
-        data2,
-        headers2,
-        ignore_case=False,
-        row_match='order',
-        column_match='exact',
-        string_match='exact',
-        include_addnl_rows=False,
-        include_addnl_columns=False,
-        include_stats=True,
-        save_output=True,
-        ticker=None):
+def run(data1: List[List[Any]],
+        headers1: List[str],
+        data2: List[List[Any]],
+        headers2: List[str],
+        ignore_case: bool = False,
+        row_match: str = 'order',
+        column_match: str = 'exact',
+        string_match: str = 'exact',
+        include_addnl_rows: bool = False,
+        include_addnl_columns: bool = False,
+        include_stats: bool = True,
+        save_output: bool = True,
+        ticker: Optional[callable] = None) -> Dict[str, Any]:
+    """Compare two CSV datasets with various matching strategies.
+    
+    Args:
+        data1: First dataset rows
+        headers1: First dataset headers
+        data2: Second dataset rows  
+        headers2: Second dataset headers
+        ignore_case: Ignore case when comparing strings
+        row_match: Row matching strategy ('order', 'fuzzy', 'deep')
+        column_match: Column matching strategy ('exact', 'fuzzy')
+        string_match: String matching strategy ('exact', 'fuzzy')
+        include_addnl_rows: Include additional rows from second dataset
+        include_addnl_columns: Include additional columns from second dataset
+        include_stats: Include comparison statistics
+        save_output: Save output to files
+        ticker: Progress callback function
+        
+    Returns:
+        Dictionary containing comparison results, values, headers, and stats
+    """
     headers1 = cleanup(headers1)
     headers2 = cleanup(headers2)
     matched_headers = prepare_headers(data1, headers1, headers2, column_match)
@@ -45,7 +65,16 @@ def run(data1,
     return final_result
 
 
-def populate_stats(headers, results_list):
+def populate_stats(headers: List[str], results_list: List[List[bool]]) -> Dict[str, str]:
+    """Calculate comparison statistics for each column.
+    
+    Args:
+        headers: Column headers
+        results_list: Boolean comparison results for each row
+        
+    Returns:
+        Dictionary mapping header names to match percentages
+    """
     stat = {}
     for index, header in enumerate(headers):
         header_data = [result[index] for result in results_list]
@@ -56,7 +85,15 @@ def populate_stats(headers, results_list):
     return stat
 
 
-def populate_output(rows_match):
+def populate_output(rows_match: List[List[Tuple[str, bool]]]) -> Tuple[List[List[bool]], List[List[str]]]:
+    """Extract results and values from row comparison output.
+    
+    Args:
+        rows_match: List of row comparison results
+        
+    Returns:
+        Tuple of (boolean results, formatted values)
+    """
     rows_result_list = []
     rows_values_list = []
     for match in rows_match:
@@ -71,13 +108,37 @@ def populate_output(rows_match):
     return rows_result_list, rows_values_list
 
 
-def populate_headers(header_index, headers2):
+def populate_headers(header_index: Dict[str, Dict[str, Any]], headers2: List[str]) -> List[str]:
+    """Get additional headers from second dataset.
+    
+    Args:
+        header_index: Header mapping information
+        headers2: Second dataset headers
+        
+    Returns:
+        List of additional headers not in first dataset
+    """
     mapped_headers2 = [value['matched_header'] for item, value in header_index.items() if value['index'] > -1]
     addnl_headers2 = [header for header in headers2 if header not in mapped_headers2]
     return addnl_headers2
 
 
-def compare_data(data1, data2, headers1, headers2, matched_headers, **kwargs):
+def compare_data(data1: List[List[Any]], data2: List[List[Any]], headers1: List[str], 
+                headers2: List[str], matched_headers: Dict[str, Dict[str, Any]], 
+                **kwargs) -> Tuple[List[List[Tuple[str, bool]]], List[List[Any]], List[List[Any]]]:
+    """Compare data between two datasets.
+    
+    Args:
+        data1: First dataset rows
+        data2: Second dataset rows
+        headers1: First dataset headers
+        headers2: Second dataset headers
+        matched_headers: Header mapping information
+        **kwargs: Additional comparison options
+        
+    Returns:
+        Tuple of (comparison output, added rows, deleted rows)
+    """
     added_rows = []
     common_rows = []
     deleted_rows = []
@@ -121,11 +182,28 @@ def compare_data(data1, data2, headers1, headers2, matched_headers, **kwargs):
     return rows_output, added_rows, deleted_rows
 
 
-def cleanup(headers):
+def cleanup(headers: List[str]) -> List[str]:
+    """Clean whitespace from headers.
+    
+    Args:
+        headers: List of header strings
+        
+    Returns:
+        List of cleaned header strings
+    """
     return [header.strip() for header in headers]
 
 
-def exist_in_list(option, option_list):
+def exist_in_list(option: str, option_list: List[str]) -> Tuple[bool, int]:
+    """Check if an option exists in a list (case-insensitive).
+    
+    Args:
+        option: Option to search for
+        option_list: List to search in
+        
+    Returns:
+        Tuple of (exists, index)
+    """
     cleaned_list = [str(o).lower().strip() for o in option_list]
     exists = str(option).lower().strip() in cleaned_list
     index = -1
@@ -134,7 +212,19 @@ def exist_in_list(option, option_list):
     return exists, index
 
 
-def prepare_headers(data1, headers1, headers2, column_match):
+def prepare_headers(data1: List[List[Any]], headers1: List[str], headers2: List[str], 
+                   column_match: str) -> Dict[str, Dict[str, Any]]:
+    """Prepare header mapping between datasets.
+    
+    Args:
+        data1: First dataset rows (for type prediction)
+        headers1: First dataset headers
+        headers2: Second dataset headers
+        column_match: Column matching strategy
+        
+    Returns:
+        Dictionary mapping headers to match information
+    """
     mapped_headers_index = OrderedDict()
     mapped_indices2 = []
     for idx, header in enumerate(headers1):
@@ -264,14 +354,14 @@ def compare_cells(cell1, cell2, comparison_type, ignore_case):
                 cell2 = cell2.lower()
 
             return str(cell1).strip() == str(cell2).strip()
-    except:
+    except (ValueError, TypeError):
         if ignore_case:
-            cell1 = cell1.lower()
-            cell2 = cell2.lower()
+            cell1 = str(cell1).lower()
+            cell2 = str(cell2).lower()
         return str(cell1).strip() == str(cell2).strip()
 
 
-def predict_column_type(data):
+def predict_column_type(data: List[Any]) -> str:
     """
     Predict the data type of the elements present in a list. It will be defaulted to string.
 

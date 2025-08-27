@@ -1,3 +1,4 @@
+from typing import Tuple, List, Any, Optional
 import sys
 import os
 import io
@@ -14,7 +15,8 @@ from pprint import pprint
 
 # This file is derived from https://github.com/maxharlow/csvmatch/blob/master/cli.py
 
-def main():
+def main() -> None:
+    """Main entry point for the CLI application."""
     logging.captureWarnings(True)
     logging.basicConfig(level=logging.WARN, format='Warning: %(message)s')
     warnings.formatwarning = lambda e, *args: str(e)
@@ -28,18 +30,40 @@ def main():
         if args.get("save_output"):
             save_file("values.csv", results['headers'], results['values'])
             save_file("results.csv", results['headers'], results['results'])
-        pprint(results['stats'])
+        if args.get("include_stats") and 'stats' in results:
+            pprint(results['stats'])
         sys.stdout.flush()
     except BaseException as e:
         sys.exit(e)
 
 
-def ticker(text, total):
+def ticker(text: str, total: int) -> callable:
+    """Create a progress bar ticker function.
+    
+    Args:
+        text: Progress bar description
+        total: Total number of items
+        
+    Returns:
+        Progress bar update function
+    """
     progress = tqdm.tqdm(bar_format=text + ' |{bar}| {percentage:3.0f}% / {remaining} left', total=total)
     return progress.update
 
 
-def read(filename, encoding):
+def read(filename: str, encoding: Optional[str]) -> Tuple[List[List[Any]], List[str]]:
+    """Read and parse a CSV file.
+    
+    Args:
+        filename: Path to the CSV file or '-' for stdin
+        encoding: Character encoding to use, or None for auto-detection
+        
+    Returns:
+        Tuple of (data rows, headers)
+        
+    Raises:
+        Exception: If file cannot be read or parsed
+    """
     if not os.path.isfile(filename) and filename != '-':
         raise Exception(filename + ': no such file')
     file = sys.stdin if filename == '-' else io.open(filename, 'rb')
@@ -67,7 +91,12 @@ def read(filename, encoding):
         raise Exception(filename + ': could not read file as a CSV')
 
 
-def arguments():
+def arguments() -> Tuple[Tuple[str, Optional[str]], Tuple[str, Optional[str]], dict]:
+    """Parse command line arguments.
+    
+    Returns:
+        Tuple of ((file1, encoding1), (file2, encoding2), args_dict)
+    """
     parser = argparse.ArgumentParser(description='CSV files comparison')
     parser.add_argument('-v', '--version', action='version', version=__version__)
     parser.add_argument('FILE1', nargs='?', default='-', help='the first CSV file')
@@ -80,8 +109,8 @@ def arguments():
     parser.add_argument('-sm', '--string-match', default='exact', help='Logic to be used to identify the columns. Possible options \'exact\',\'fuzzy\' (default is exact)')
     parser.add_argument('-ir', '--include-addnl-rows', action='store_true', help='Include additional rows from second file (default is false)')
     parser.add_argument('-ic', '--include-addnl-columns', action='store_true', help='Include additional columns from second file (default is false)')
-    parser.add_argument('-is', '--include-stats', default=True, action='store_true', help='Include stats (default is true)')
-    parser.add_argument('-s', '--save-output', default=True, action='store_true', help='Save output to file. This saves the output in the current directory (default is true)')
+    parser.add_argument('-is', '--include-stats', action='store_true', help='Include stats (default is false)')
+    parser.add_argument('-s', '--save-output', action='store_true', help='Save output to file. This saves the output in the current directory (default is false)')
 
     args = vars(parser.parse_args())
     if args['FILE1'] == '-' and args['FILE2'] == '-':
@@ -93,17 +122,32 @@ def arguments():
     enc2 = args.pop('enc2')
     return (file1, enc1), (file2, enc2), args
 
-def save_file(file_name, keys, results):
+def save_file(file_name: str, keys: List[str], results: List[List[Any]]) -> None:
+    """Save comparison results to a CSV file.
+    
+    Args:
+        file_name: Output file name
+        keys: Column headers
+        results: Data rows to write
+    """
     updated_keys = ['S.No'] + keys
     updated_results = [[idx+1]+result for idx,result in enumerate(results)]
 
-    curr_dir = os.getcwd()
-    with open(os.getcwd() + os.path.sep + file_name, 'w') as file:
+    with open(os.path.join(os.getcwd(), file_name), 'w', newline='') as file:
         writer = csv.writer(file, lineterminator='\n')  # can't use dictwriter as headers are printed even when there's no results
         writer.writerow(updated_keys)
         writer.writerows(updated_results)
 
-def format(results, keys):
+def format(results: List[List[Any]], keys: List[str]) -> str:
+    """Format results as CSV string.
+    
+    Args:
+        results: Data rows
+        keys: Column headers
+        
+    Returns:
+        Formatted CSV string
+    """
     writer_io = io.StringIO()
     writer = csv.writer(writer_io, lineterminator='\n')  # can't use dictwriter as headers are printed even when there's no results
     writer.writerow(keys)
